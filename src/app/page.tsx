@@ -222,21 +222,21 @@ export default function Home() {
             <div className="flex flex-col items-center justify-center w-full">
               <h2 className="text-2xl font-bold mt-4">Post It</h2>
               <div className="flex flex-row justify-center space-x-4 mt-2">
-                <Button onClick={() => handleLinkedInPost(generatedPost.post)}>
-                  <Icons.linkedin className="mr-2" />
+                <Button className="flex flex-col items-center" onClick={() => handleLinkedInPost(generatedPost.post)}>
+                  <Icons.linkedin className="mx-auto" size={20} />
                   LinkedIn
                 </Button>
-                <Button onClick={() => handleFacebookPost(generatedPost.post)}>
-                  <Icons.facebook className="mr-2" />
+                <Button className="flex flex-col items-center" onClick={() => handleFacebookPost(generatedPost.post)}>
+                  <Icons.facebook className="mx-auto" size={20} />
                   Facebook
                 </Button>
-                <Button onClick={() => handleTwitterPost(generatedPost.post)}>
-                  <Icons.twitter className="mr-2" />
+                <Button className="flex flex-col items-center" onClick={() => handleTwitterPost(generatedPost.post)}>
+                  <Icons.twitter className="mx-auto" size={20} />
                   X
                 </Button>
                 {/* Placeholder for Instagram - No direct posting available */}
-                <Button disabled>
-                  <Icons.instagram className="mr-2" />
+                <Button disabled className="flex flex-col items-center">
+                  <Icons.instagram className="mx-auto" size={20} />
                   Instagram
                 </Button>
               </div>
