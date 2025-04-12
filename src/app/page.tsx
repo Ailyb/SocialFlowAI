@@ -35,7 +35,7 @@ export default function Home() {
   const [generatedPost, setGeneratedPost] = useState<GenerateSocialPostOutput | null>(null);
   const {toast} = useToast();
   const [authToken, setAuthToken] = useState<string | null>(null);
-  const [includeImage, setIncludeImage] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null); // Store the URL of the generated image
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -140,11 +140,27 @@ export default function Home() {
     }
   };
 
+  const handleGenerateImage = async () => {
+      // Placeholder logic: Replace with your AI image generation integration
+      // Example:
+      // const imageUrl = await generateAIImage(generatedPost.post); // Replace generateAIImage with your actual function
+      // setGeneratedImage(imageUrl);
+
+      // For now, use a placeholder image:
+      setGeneratedImage('https://picsum.photos/512/256');
+
+      toast({
+        title: 'AI Image Generated!',
+        description: 'An AI-generated image has been created for your post.',
+      });
+    };
+
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const post = await generateSocialPost({topic: values.topic, tone: values.tone});
       setGeneratedPost(post);
+      setGeneratedImage(null); // Reset the generated image when a new post is generated
       toast({
         title: 'Post Generated!',
         description: 'Your social media post has been generated successfully.',
@@ -236,21 +252,23 @@ export default function Home() {
           <>
             <CardFooter className="flex flex-col space-y-4">
               <Textarea className="w-full" value={generatedPost.post} readOnly />
-               <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include-image"
-                      checked={includeImage}
-                      onCheckedChange={(checked) => setIncludeImage(checked || false)}
-                    />
-                    <Label htmlFor="include-image">Add AI Generated Image</Label>
-                  </div>
+               {generatedImage && (
+                  <img
+                    src={generatedImage}
+                    alt="AI Generated Image"
+                    className="w-full rounded-md"
+                  />
+                )}
               <Button className="w-full" onClick={() => handleCopyToClipboard(generatedPost.post)}>
                 Copy to Clipboard
               </Button>
+              <Button className="w-full" onClick={handleGenerateImage}>
+                 Add AI Generated Image
+              </Button>
             </CardFooter>
-            <div className="flex flex-col items-center justify-center w-full">
-              <h2 className="text-2xl font-bold mt-4">Post It</h2>
-              <div className="flex flex-row justify-center space-x-4 mt-2">
+             <div className="flex flex-col items-center justify-center w-full mt-4">
+              <h2 className="text-2xl font-bold mb-2">Post It</h2>
+              <div className="flex flex-row justify-center space-x-4">
                 <Button className="flex flex-col items-center justify-center p-2" style={{ marginTop: '10px', marginBottom: '5px' }} onClick={() => handleLinkedInPost(generatedPost.post)}>
                   <Icons.linkedin className="mx-auto" size={20} />
                   <span className="mx-auto">LinkedIn</span>
