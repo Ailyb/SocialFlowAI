@@ -17,6 +17,7 @@ import {postToLinkedIn, LinkedInPost} from "@/services/linkedin";
 import {postToFacebook, FacebookPost} from "@/services/facebook";
 import {postToTwitter, Tweet} from "@/services/twitter";
 import { Icons } from '@/components/icons';
+import { Checkbox } from "@/components/ui/checkbox"
 
 const formSchema = z.object({
   topic: z.string().min(2, {
@@ -34,6 +35,7 @@ export default function Home() {
   const [generatedPost, setGeneratedPost] = useState<GenerateSocialPostOutput | null>(null);
   const {toast} = useToast();
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [includeImage, setIncludeImage] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -43,6 +45,22 @@ export default function Home() {
       email: '',
     },
   });
+
+  const handleCopyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: 'Copied to clipboard!',
+        description: 'The post content has been copied to your clipboard.',
+      });
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to copy text to clipboard. Please try again.',
+      });
+    }
+  };
 
   const handleLinkedInPost = async (content: string) => {
     if (!authToken) {
@@ -216,28 +234,39 @@ export default function Home() {
         </CardContent>
         {generatedPost && (
           <>
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-4">
               <Textarea className="w-full" value={generatedPost.post} readOnly />
+               <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="include-image"
+                      checked={includeImage}
+                      onCheckedChange={(checked) => setIncludeImage(checked || false)}
+                    />
+                    <Label htmlFor="include-image">Add AI Generated Image</Label>
+                  </div>
+              <Button className="w-full" onClick={() => handleCopyToClipboard(generatedPost.post)}>
+                Copy to Clipboard
+              </Button>
             </CardFooter>
             <div className="flex flex-col items-center justify-center w-full">
               <h2 className="text-2xl font-bold mt-4">Post It</h2>
               <div className="flex flex-row justify-center space-x-4 mt-2">
-                <Button className="flex flex-col items-center" onClick={() => handleLinkedInPost(generatedPost.post)}>
+                <Button className="flex flex-col items-center justify-center p-2" style={{ marginTop: '10px', marginBottom: '5px' }} onClick={() => handleLinkedInPost(generatedPost.post)}>
                   <Icons.linkedin className="mx-auto" size={20} />
-                  LinkedIn
+                  <span className="mx-auto">LinkedIn</span>
                 </Button>
-                <Button className="flex flex-col items-center" onClick={() => handleFacebookPost(generatedPost.post)}>
+                <Button className="flex flex-col items-center justify-center p-2" style={{ marginTop: '10px', marginBottom: '5px' }} onClick={() => handleFacebookPost(generatedPost.post)}>
                   <Icons.facebook className="mx-auto" size={20} />
-                  Facebook
+                  <span className="mx-auto">Facebook</span>
                 </Button>
-                <Button className="flex flex-col items-center" onClick={() => handleTwitterPost(generatedPost.post)}>
+                <Button className="flex flex-col items-center justify-center p-2" style={{ marginTop: '10px', marginBottom: '5px' }} onClick={() => handleTwitterPost(generatedPost.post)}>
                   <Icons.twitter className="mx-auto" size={20} />
-                  X
+                  <span className="mx-auto">X</span>
                 </Button>
                 {/* Placeholder for Instagram - No direct posting available */}
-                <Button disabled className="flex flex-col items-center">
+                <Button disabled className="flex flex-col items-center justify-center p-2" style={{ marginTop: '10px', marginBottom: '5px' }}>
                   <Icons.instagram className="mx-auto" size={20} />
-                  Instagram
+                  <span className="mx-auto">Instagram</span>
                 </Button>
               </div>
             </div>
