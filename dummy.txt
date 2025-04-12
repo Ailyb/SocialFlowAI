@@ -1,0 +1,2 @@
+with open("dummy.txt", "w") as f:
+    f.write("This is a dummy file.")
