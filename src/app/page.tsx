@@ -13,6 +13,10 @@ import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {useEffect, useState} from 'react';
 import {toast} from "@/hooks/use-toast";
+import {postToLinkedIn, LinkedInPost} from "@/services/linkedin";
+import {postToFacebook, FacebookPost} from "@/services/facebook";
+import {postToTwitter, Tweet} from "@/services/twitter";
+import { Icons } from '@/components/icons';
 
 const formSchema = z.object({
   topic: z.string().min(2, {
@@ -29,6 +33,7 @@ const formSchema = z.object({
 export default function Home() {
   const [generatedPost, setGeneratedPost] = useState<GenerateSocialPostOutput | null>(null);
   const {toast} = useToast();
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,6 +43,85 @@ export default function Home() {
       email: '',
     },
   });
+
+  const handleLinkedInPost = async (content: string) => {
+    if (!authToken) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'Please sign in to post to LinkedIn.',
+      });
+      return;
+    }
+
+    try {
+      const linkedInPost: LinkedInPost = await postToLinkedIn(content, authToken);
+      toast({
+        title: 'Posted to LinkedIn!',
+        description: `Your post has been published. View it here: ${linkedInPost.postUrl}`,
+      });
+    } catch (error: any) {
+      console.error('Error posting to LinkedIn:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to post to LinkedIn. Please try again.',
+      });
+    }
+  };
+
+  const handleFacebookPost = async (content: string) => {
+    if (!authToken) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'Please sign in to post to Facebook.',
+      });
+      return;
+    }
+
+    try {
+      const facebookPost: FacebookPost = await postToFacebook(content, authToken);
+      toast({
+        title: 'Posted to Facebook!',
+        description: `Your post has been published. View it here: ${facebookPost.postUrl}`,
+      });
+    } catch (error: any) {
+      console.error('Error posting to Facebook:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to post to Facebook. Please try again.',
+      });
+    }
+  };
+
+  const handleTwitterPost = async (content: string) => {
+    if (!authToken) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'Please sign in to post to Twitter.',
+      });
+      return;
+    }
+
+    try {
+      const tweet: Tweet = await postToTwitter(content, authToken);
+      toast({
+        title: 'Posted to Twitter!',
+        description: `Your tweet has been published. View it here: ${tweet.tweetUrl}`,
+      });
+    } catch (error: any) {
+      console.error('Error posting to Twitter:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to post to Twitter. Please try again.',
+      });
+    }
+  };
+
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -131,9 +215,33 @@ export default function Home() {
           </Form>
         </CardContent>
         {generatedPost && (
-          <CardFooter>
-            <Textarea className="w-full" value={generatedPost.post} readOnly />
-          </CardFooter>
+          <>
+            <CardFooter>
+              <Textarea className="w-full" value={generatedPost.post} readOnly />
+            </CardFooter>
+            <div className="flex flex-col items-center justify-center w-full">
+              <h2 className="text-2xl font-bold mt-4">Post It</h2>
+              <div className="flex flex-row justify-center space-x-4 mt-2">
+                <Button onClick={() => handleLinkedInPost(generatedPost.post)}>
+                  <Icons.linkedin className="mr-2" />
+                  LinkedIn
+                </Button>
+                <Button onClick={() => handleFacebookPost(generatedPost.post)}>
+                  <Icons.facebook className="mr-2" />
+                  Facebook
+                </Button>
+                <Button onClick={() => handleTwitterPost(generatedPost.post)}>
+                  <Icons.twitter className="mr-2" />
+                  X
+                </Button>
+                {/* Placeholder for Instagram - No direct posting available */}
+                <Button disabled>
+                  <Icons.instagram className="mr-2" />
+                  Instagram
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </Card>
     </div>
