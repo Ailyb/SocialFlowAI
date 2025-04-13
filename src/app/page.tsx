@@ -11,26 +11,17 @@ import {useToast} from '@/hooks/use-toast';
 import {z} from 'zod';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {toast} from "@/hooks/use-toast";
 import {postToLinkedIn, LinkedInPost} from "@/services/linkedin";
 import {postToFacebook, FacebookPost} from "@/services/facebook";
 import {postToTwitter, Tweet} from "@/services/twitter";
 import {Icons} from '@/components/icons';
-
-/**
- * @fileOverview Generates an image based on a text prompt.
- *
- * - generateImage - A function that generates an image URL from a text prompt.
- * - GenerateImageInput - The input type for the generateImage function.
- * - GenerateImageOutput - The return type for the generateImage function.
- */
+import { LucideIcon } from "lucide-react";
+import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter } from 'react-icons/fa';
+import { Copy } from "lucide-react";
 
 import {ai} from '@/ai/ai-instance';
-import {LucideIcon} from "lucide-react";
-
-import {FaFacebook, FaInstagram, FaLinkedin, FaTwitter} from 'react-icons/fa';
-import {Copy} from "lucide-react";
 
 const formSchema = z.object({
   topic: z.string().min(2, {
@@ -44,50 +35,12 @@ const formSchema = z.object({
   }),
 });
 
-const GenerateImageInputSchema = z.object({
-  prompt: z.string().describe('The text prompt to generate the image from.'),
-});
-
-type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
-
-const GenerateImageOutputSchema = z.object({
-  imageUrl: z.string().describe('The URL of the generated image.'),
-});
-
-type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
-
-async function generateImageImpl(input: GenerateImageInput): Promise<GenerateImageOutput> {
-  return generateImageFlow(input);
-}
-
-const generateImagePrompt = ai.definePrompt({
-  name: 'generateImagePrompt',
-  input: {
-    schema: GenerateImageInputSchema,
-  },
-  output: {
-    schema: GenerateImageOutputSchema,
-  },
-  prompt: `You are an AI image generator. Generate a URL for an image based on the following prompt: {{{prompt}}}`,
-});
-
-const generateImageFlow = ai.defineFlow<
-  typeof GenerateImageInputSchema,
-  typeof GenerateImageOutputSchema
->({
-  name: 'generateImageFlow',
-  inputSchema: GenerateImageInputSchema,
-  outputSchema: GenerateImageOutputSchema,
-}, async (input) => {
-  const {output} = await generateImagePrompt(input);
-  return output!;
-});
-
 export default function Home() {
   const [generatedPost, setGeneratedPost] = useState<GenerateSocialPostOutput | null>(null);
   const {toast} = useToast();
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null); // Store the URL of the generated image
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -99,35 +52,39 @@ export default function Home() {
   });
 
   const generateAIImage = useCallback(async (prompt: string): Promise<string | null> => {
-    try {
-      const response = await generateImageImpl({prompt});
-      return response.imageUrl;
-    } catch (error: any) {
-      console.error('Error generating AI image:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to generate AI image. Please try again.',
-      });
-      return null;
-    }
+   try {
+     const response = await ai.callFlow('generateImageFlow', { prompt });
+     return response.imageUrl;
+   } catch (error: any) {
+     console.error('Error generating AI image:', error);
+     toast({
+       variant: 'destructive',
+       title: 'Error',
+       description: error.message || 'Failed to generate AI image. Please try again.',
+     });
+     return null;
+   }
   }, [toast]);
 
   const handleGenerateImage = useCallback(async () => {
-    if (!generatedPost?.post) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please generate a social media post first.',
-      });
-      return;
-    }
-
-    // Using the generatedPost.post as the prompt for image generation
-    const imageUrl = await generateAIImage(generatedPost.post);
-    if (imageUrl) {
-      setGeneratedImage(imageUrl);
-    }
+   if (!generatedPost?.post) {
+     toast({
+       variant: 'destructive',
+       title: 'Error',
+       description: 'Please generate a social media post first.',
+     });
+     return;
+   }
+   setIsGeneratingImage(true);
+   try {
+     // Using the generatedPost.post as the prompt for image generation
+     const imageUrl = await generateAIImage(generatedPost.post);
+     if (imageUrl) {
+       setGeneratedImage(imageUrl);
+     }
+   } finally {
+     setIsGeneratingImage(false);
+   }
   }, [generatedPost, generateAIImage, toast]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -193,7 +150,6 @@ export default function Home() {
       });
       return;
     }
-    handleLinkedInPost(generatedPost.post);
   }
 
   async function handlePostToFacebook() {
@@ -205,7 +161,6 @@ export default function Home() {
       });
       return;
     }
-    handleFacebookPost(generatedPost.post);
   }
 
   async function handlePostToTwitter() {
@@ -217,7 +172,6 @@ export default function Home() {
       });
       return;
     }
-    handleTwitterPost(generatedPost.post);
   }
 
   return (
@@ -282,11 +236,17 @@ export default function Home() {
                       
                     )}
                     Copy to Clipboard
-                    Add AI Generated Image
+                    {isGeneratingImage ? (
+                      
+                    ) : (
+                      
+                        Add AI Generated Image
+                      
+                    )}
                   
                 
-                 Post It
-                 
+               Post It
+               
                   
                       LinkedIn
                     
