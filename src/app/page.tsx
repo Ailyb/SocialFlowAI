@@ -57,7 +57,7 @@ export default function Home() {
         const file = new File([blob], "image.png", { type: blob.type });
 
         // Create a new ClipboardItem with the image
-        const clipboardItem = new ClipboardItem({
+        const clipboardItem = ClipboardItem({
           [blob.type]: file
         });
 
@@ -159,13 +159,24 @@ export default function Home() {
   };
 
   const handleGenerateImage = async () => {
+      if (!generatedPost || !generatedPost.post) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No post generated yet. Please generate a post first.',
+        });
+        return;
+      }
+
       // Placeholder logic: Replace with your AI image generation integration
+      // Use the generatedPost.post as the prompt for image generation
       // Example:
       // const imageUrl = await generateAIImage(generatedPost.post); // Replace generateAIImage with your actual function
       // setGeneratedImage(imageUrl);
 
-      // For now, use a placeholder image:
-      setGeneratedImage('https://picsum.photos/512/256');
+      // For now, use a placeholder image related to the post:
+      const imageUrl = `https://picsum.photos/512/256?text=${encodeURIComponent(generatedPost.post.substring(0, 20))}`;
+      setGeneratedImage(imageUrl);
 
       toast({
         title: 'AI Image Generated!',
@@ -312,4 +323,5 @@ export default function Home() {
     </div>
   );
 }
+
 
