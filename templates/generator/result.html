@@ -1,0 +1,23 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generated Post</title>
+</head>
+<body>
+    <h1>Generated Social Media Post</h1>
+    <p>{{ post.content }}</p>
+
+    {% if post.image_url %}
+        <img src="{{post.image_url}}" alt="AI Generated Image">
+    {% endif %}
+    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+
+    <script>
+        function copyToClipboard() {
+            navigator.clipboard.writeText("{{ post.content }}");
+            alert("Post copied to clipboard!");
+        }
+    </script>
+</body>
+</html>

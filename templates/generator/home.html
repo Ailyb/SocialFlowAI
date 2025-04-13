@@ -1,0 +1,17 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SocialFlowAI - Generate Post</title>
+</head>
+<body>
+    <h1>SocialFlowAI</h1>
+    <p>Your AI-powered social media post generator.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Generate Post</button>
+    </form>
+</body>
+</html>
