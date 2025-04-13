@@ -1,14 +1,17 @@
-
 {
   "name": "socialflowai",
   "version": "0.1.0",
   "description": "A social media post generator",
   "main": "index.js",
   "scripts": {
-    "start": "python manage.py runserver"
+    "start": "python manage.py runserver",
+    "migrate": "python manage.py migrate",
+    "makemigrations": "python manage.py makemigrations"
   },
   "dependencies": {
-    "django": "^4.2"
+    "django": "^4.2",
+    "django-cors-headers": "*",
+    "djangorestframework": "*"
   },
   "devDependencies": {},
   "keywords": [],
