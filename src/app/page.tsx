@@ -104,85 +104,195 @@ import {generateImage, GenerateImageOutput} from '@/ai/flows/generate-image';
          return;
        }
  
--      // Using the generatedPost.post as the prompt for image generation
-+      
-+      // Using the generatedPost.post as the prompt for image generation      
+       // Using the generatedPost.post as the prompt for image generation
        const imageUrl = await generateAIImage(generatedPost.post); // Replace generateAIImage with your actual function
  
        setGeneratedImage(imageUrl);
-@@ -123,7 +120,7 @@
+    };
  
-   useEffect(() => {
+    useEffect(() => {
      if (generatedPost) {
--        console.log("Generated Post:", generatedPost.post); // Debugging line
-+      console.log("Generated Post:", generatedPost.post); // Debugging line
+       console.log("Generated Post:", generatedPost.post); // Debugging line
      }
    }, [generatedPost]);
  
-@@ -206,7 +203,7 @@
-             </div>
+   const handleLinkedInPost = async () => {
+     if (!generatedPost) {
+       toast({
+         title: "Generate a post first!",
+         description: "Please generate a social media post before posting.",
+         variant: "destructive",
+       });
+       return;
+     }
+ 
+     try {
+       // Replace 'YOUR_LINKEDIN_AUTH_TOKEN' with the actual user's LinkedIn OAuth token
+       const linkedInPost = await postToLinkedIn(generatedPost.post, 'YOUR_LINKEDIN_AUTH_TOKEN');
+       toast({
+         title: "Posted to LinkedIn!",
+         description: `Successfully posted: ${linkedInPost.content}`,
+       });
+     } catch (error: any) {
+       toast({
+         title: "Error posting to LinkedIn!",
+         description: error.message,
+         variant: "destructive",
+       });
+     }
+   };
+ 
+   const handleFacebookPost = async () => {
+     if (!generatedPost) {
+       toast({
+         title: "Generate a post first!",
+         description: "Please generate a social media post before posting.",
+         variant: "destructive",
+       });
+       return;
+     }
+ 
+     try {
+       // Replace 'YOUR_FACEBOOK_AUTH_TOKEN' with the actual user's Facebook OAuth token
+       const facebookPost = await postToFacebook(generatedPost.post, 'YOUR_FACEBOOK_AUTH_TOKEN');
+       toast({
+         title: "Posted to Facebook!",
+         description: `Successfully posted: ${facebookPost.content}`,
+       });
+     } catch (error: any) {
+       toast({
+         title: "Error posting to Facebook!",
+         description: error.message,
+         variant: "destructive",
+       });
+     }
+   };
+ 
+   const handleTwitterPost = async () => {
+     if (!generatedPost) {
+       toast({
+         title: "Generate a post first!",
+         description: "Please generate a social media post before tweeting.",
+         variant: "destructive",
+       });
+       return;
+     }
+ 
+     try {
+       // Replace 'YOUR_TWITTER_AUTH_TOKEN' with the actual user's Twitter OAuth token
+       const tweet = await postToTwitter(generatedPost.post, 'YOUR_TWITTER_AUTH_TOKEN');
+       toast({
+         title: "Posted to Twitter!",
+         description: `Successfully tweeted: ${tweet.content}`,
+       });
+     } catch (error: any) {
+       toast({
+         title: "Error posting to Twitter!",
+         description: error.message,
+         variant: "destructive",
+       });
+     }
+   };
+ 
+  const handleInstagramPost = async () => {
+       if (!generatedPost) {
+         toast({
+           title: "Generate a post first!",
+           description: "Please generate a social media post before posting to Instagram.",
+           variant: "destructive",
+         });
+         return;
+       }
+ 
+       toast({
+         title: "Instagram Posting",
+         description: "Instagram posting is not supported yet!",
+         variant: "warning",
+       });
+     };
+ 
+   return (
+     
+       
+         
+           Social Post Generator
+           Generate AI Social Media Posts
+         
+         
+           
+             
+               
+                 Topic
+                 
+                   
+                     
+                       Enter topic
+                     
+                   
+                 
+               
+             
+             
+               Generate Post
+             
+           
+         
+ 
+         
+           {generatedPost ? (
+             
+               
+                 {generatedImage && (
+                   
+                     
+                       
+                         
+                       
+                     
+                   
+                 )}
+                 
+                   
+                     Add AI Generated Image
+                   
+                 
+                 
+                   Post It
+                   
+                     Copy to Clipboard
+                   
+                 
+                 
+                   
+                     
+                       
+                         LinkedIn
+                       
+                     
+                     
+                       
+                         Facebook
+                       
+                     
+                     
+                       
+                         Twitter
+                       
+                     
+                     
+                       
+                         Instagram
+                       
+                     
+                   
+                 
+               
+             
            ) : (
              
--              
-+            
-               {generatedImage && (
-                 
-                     
-@@ -217,7 +214,7 @@
-               
-             
-             
--              
-+            
-               
-                 <Button onClick={handleGenerateImage} className="mt-4">
-                   Add AI Generated Image
-@@ -225,7 +222,7 @@
-               
-             
-             
--              
-+            
-               Post It
-               <Button onClick={() => copyToClipboard(generatedPost.post)} className="mt-4">
-                 Copy to Clipboard
-@@ -233,7 +230,7 @@
-               
-             
-             
--              
-+            
-               
-                 
-                   
-@@ -242,7 +239,7 @@
-                   LinkedIn
-                 
-               
--              
-+              
-                 
-                   
-                     Facebook
-                   
-               
--              
-+              
-                 
-                   
-                     Twitter
-                   
-               
--              
-+              
-                 
-                   
-                     Instagram
-                   
-               
--            
-+            
            )}
          
        
-
+     
+   );
+ }
