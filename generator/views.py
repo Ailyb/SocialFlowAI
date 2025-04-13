@@ -71,15 +71,17 @@ def home(request):
             max_length = form.cleaned_data['max_length']
 
             # Generate social media post
-            social_post = generate_social_post(topic, tone, max_length)
+            social_post = await generate_social_post(topic, tone, max_length)
 
             # Generate AI image
-            image_url = generate_ai_image(await social_post)  # Ensure social_post is awaited
+            image_url = await generate_ai_image(social_post)  # Ensure social_post is awaited
             
             # Create a Post instance in the database
-            post = Post.objects.create(topic=topic, tone=tone, content=await social_post, image_url=image_url)
+            post = Post.objects.create(topic=topic, tone=tone, content=social_post, image_url=image_url)
             return render(request, 'generator/result.html', {'post': post})
     else:
         form = PostForm()
     return render(request, 'generator/home.html', {'form': form})
 
+
+    
