@@ -23,3 +23,4 @@ urlpatterns = [
     path('generator/', include('generator.urls')),
     path('', include('generator.urls')), # Optionally, map the root URL to the generator app
 ]
+

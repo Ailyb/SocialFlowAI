@@ -11,3 +11,4 @@ class PostForm(forms.Form):
         max_value=3000,
         widget=forms.NumberInput(attrs={'type': 'range', 'class': 'form-range'})
     )
+

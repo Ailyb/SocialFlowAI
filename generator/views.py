@@ -82,3 +82,4 @@ def home(request):
     else:
         form = PostForm()
     return render(request, 'generator/home.html', {'form': form})
+

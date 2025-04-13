@@ -1,3 +1,2 @@
-import '@/ai/flows/generate-social-post.ts';
-import '@/ai/flows/summarize-trending-topics.ts';
 
+// This file is no longer needed as part of the Django migration. It should be removed.
