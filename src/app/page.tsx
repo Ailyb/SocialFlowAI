@@ -62,10 +62,10 @@ export default function Home() {
         });
 
         // Write the ClipboardItem to the clipboard
-        await navigator.clipboard.write([clipboardItem]);
-      } else {
-        await navigator.clipboard.writeText(text);
+       // await navigator.clipboard.write([clipboardItem]);
       }
+       await navigator.clipboard.writeText(text);
+
 
       toast({
         title: 'Copied to clipboard!',
@@ -312,3 +312,4 @@ export default function Home() {
     </div>
   );
 }
+
