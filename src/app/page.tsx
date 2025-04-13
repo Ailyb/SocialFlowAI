@@ -11,17 +11,13 @@ import {useToast} from '@/hooks/use-toast';
 import {z} from 'zod';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
-import React, {useState, useCallback, useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import {toast} from "@/hooks/use-toast";
 import {postToLinkedIn, LinkedInPost} from "@/services/linkedin";
 import {postToFacebook, FacebookPost} from "@/services/facebook";
 import {postToTwitter, Tweet} from "@/services/twitter";
-import {Icons} from '@/components/icons';
-import { LucideIcon } from "lucide-react";
-import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter } from 'react-icons/fa';
-import { Copy } from "lucide-react";
-
-import {ai} from '@/ai/ai-instance';
+import { Icons } from '@/components/icons';
+import { Checkbox } from "@/components/ui/checkbox"
 
 const formSchema = z.object({
   topic: z.string().min(2, {
@@ -40,7 +36,6 @@ export default function Home() {
   const {toast} = useToast();
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null); // Store the URL of the generated image
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,221 +46,251 @@ export default function Home() {
     },
   });
 
-  const generateAIImage = useCallback(async (prompt: string): Promise<string | null> => {
-   try {
-     const response = await ai.callFlow('generateImageFlow', { prompt });
-     return response.imageUrl;
-   } catch (error: any) {
-     console.error('Error generating AI image:', error);
-     toast({
-       variant: 'destructive',
-       title: 'Error',
-       description: error.message || 'Failed to generate AI image. Please try again.',
-     });
-     return null;
-   }
-  }, [toast]);
-
-  const handleGenerateImage = useCallback(async () => {
-   if (!generatedPost?.post) {
-     toast({
-       variant: 'destructive',
-       title: 'Error',
-       description: 'Please generate a social media post first.',
-     });
-     return;
-   }
-   setIsGeneratingImage(true);
-   try {
-     // Using the generatedPost.post as the prompt for image generation
-     const imageUrl = await generateAIImage(generatedPost.post);
-     if (imageUrl) {
-       setGeneratedImage(imageUrl);
-     }
-   } finally {
-     setIsGeneratingImage(false);
-   }
-  }, [generatedPost, generateAIImage, toast]);
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleCopyToClipboard = async (text: string) => {
     try {
-      const post = await generateSocialPost({topic: values.topic, tone: values.tone});
-      setGeneratedPost(post);
-      setGeneratedImage(null);
-      toast({
-        title: 'Post Generated!',
-        description: 'Your social media post has been generated successfully.',
-      });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to generate social media post. Please try again.',
-      });
-    }
-  }
-
-  const handleCopyToClipboard = useCallback(async (text: string, imageUrl: string | null) => {
-    try {
-      if (imageUrl) {
-        // Fetch the image as a blob
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-
-        // Create a new file from the blob
-        const file = new File([blob], "image.png", {type: "image/png"});
-
-        // Use the ClipboardItem API to copy both text and image
-        const data = [
-          new ClipboardItem({
-            'text/plain': new Promise((resolve) => resolve(text)),
-            'image/png': new Promise((resolve) => resolve(file)),
-          })
-        ];
-        await navigator.clipboard.write(data);
-      } else {
-        await navigator.clipboard.writeText(text);
-      }
-
+      await navigator.clipboard.writeText(text);
       toast({
         title: 'Copied to clipboard!',
         description: 'The post content has been copied to your clipboard.',
       });
     } catch (err) {
-      console.error("Failed to copy:", err);
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Failed to copy text to clipboard. Please try again.',
       });
     }
-  }, [toast]);
+  };
 
-  async function handlePostToLinkedIn() {
-    if (!generatedPost?.post) {
+  const handleLinkedInPost = async (content: string) => {
+    if (!authToken) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Please generate a social media post first.',
+        title: 'Authentication Required',
+        description: 'Please sign in to post to LinkedIn.',
       });
       return;
     }
-  }
 
-  async function handlePostToFacebook() {
-    if (!generatedPost?.post) {
+    try {
+      const linkedInPost: LinkedInPost = await postToLinkedIn(content, authToken);
+      toast({
+        title: 'Posted to LinkedIn!',
+        description: `Your post has been published. View it here: ${linkedInPost.postUrl}`,
+      });
+    } catch (error: any) {
+      console.error('Error posting to LinkedIn:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Please generate a social media post first.',
+        description: error.message || 'Failed to post to LinkedIn. Please try again.',
+      });
+    }
+  };
+
+  const handleFacebookPost = async (content: string) => {
+    if (!authToken) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'Please sign in to post to Facebook.',
       });
       return;
     }
-  }
 
-  async function handlePostToTwitter() {
-    if (!generatedPost?.post) {
+    try {
+      const facebookPost: FacebookPost = await postToFacebook(content, authToken);
+      toast({
+        title: 'Posted to Facebook!',
+        description: `Your post has been published. View it here: ${facebookPost.postUrl}`,
+      });
+    } catch (error: any) {
+      console.error('Error posting to Facebook:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Please generate a social media post first.',
+        description: error.message || 'Failed to post to Facebook. Please try again.',
+      });
+    }
+  };
+
+  const handleTwitterPost = async (content: string) => {
+    if (!authToken) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'Please sign in to post to Twitter.',
       });
       return;
     }
-  }
+
+    try {
+      const tweet: Tweet = await postToTwitter(content, authToken);
+      toast({
+        title: 'Posted to Twitter!',
+        description: `Your tweet has been published. View it here: ${tweet.tweetUrl}`,
+      });
+    } catch (error: any) {
+      console.error('Error posting to Twitter:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to post to Twitter. Please try again.',
+      });
+    }
+  };
+
+  const handleGenerateImage = async () => {
+      // Placeholder logic: Replace with your AI image generation integration
+      // Example:
+      // const imageUrl = await generateAIImage(generatedPost.post); // Replace generateAIImage with your actual function
+      // setGeneratedImage(imageUrl);
+
+      // For now, use a placeholder image:
+      setGeneratedImage('https://picsum.photos/512/256');
+
+      toast({
+        title: 'AI Image Generated!',
+        description: 'An AI-generated image has been created for your post.',
+      });
+    };
+
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      const post = await generateSocialPost({topic: values.topic, tone: values.tone});
+      setGeneratedPost(post);
+      setGeneratedImage(null); // Reset the generated image when a new post is generated
+      toast({
+        title: 'Post Generated!',
+        description: 'Your social media post has been generated successfully.',
+      });
+    } catch (error: any) {
+      console.error('Error generating post:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to generate social media post. Please try again.',
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (form.formState.errors) {
+      Object.keys(form.formState.errors).forEach(key => {
+        const error = form.formState.errors[key as keyof z.infer<typeof formSchema>]?.message;
+        if (error) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error,
+          });
+        }
+      });
+    }
+  }, [form.formState.errors, toast]);
 
   return (
-    <>
-      
-        
-          
-            
-              Social Post Generator
-              Generate AI Social Media Posts
-            
-            
-              <Form {...form}>
-                
-                  
-                    Topic
-                  
-                  
-                    
-                  
-                  
-                    What is the post about?
-                  
-                  
-                
-                
-                  
-                    Tone
-                  
-                  
-                    
-                  
-                  
-                    What is the desired tone of the post?
-                  
-                  
-                
-                
-                  
-                    Email
-                  
-                  
-                    
-                  
-                  
-                    Where should we notify you?
-                  
-                  
-                
-                
-                  Generate Post
-                
-              
-            </Form>
-          
-          {generatedPost && (
-            
-              
-                
-                  
-                    {generatedImage && (
-                      
-                    )}
-                    Copy to Clipboard
-                    {isGeneratingImage ? (
-                      
-                    ) : (
-                      
-                        Add AI Generated Image
-                      
-                    )}
-                  
-                
-               Post It
-               
-                  
-                      LinkedIn
-                    
-                    
-                      Facebook
-                    
-                    
-                      X
-                    
-                    
-                      Instagram
-                    
-                  
-                
-              
-            
-          )}
-        
-      
-    </>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <h1 className="text-4xl font-bold mb-4">SocialFlow AI</h1>
+      <p className="text-lg mb-8">Your AI-powered social media post generator.</p>
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Create a Social Media Post</CardTitle>
+          <CardDescription>Enter the topic, tone, and email to generate a social media post.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="topic"
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel>Topic</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter topic" {...field} />
+                    </FormControl>
+                    <FormDescription>What is the post about?</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="tone"
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel>Tone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter tone (e.g., professional, funny)" {...field} />
+                    </FormControl>
+                    <FormDescription>What is the desired tone of the post?</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your email" {...field} type="email" />
+                    </FormControl>
+                    <FormDescription>Where should we notify you?</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full">Generate Post</Button>
+            </form>
+          </Form>
+        </CardContent>
+        {generatedPost && (
+          <>
+            <CardFooter className="flex flex-col space-y-4">
+              <Textarea className="w-full" value={generatedPost.post} readOnly />
+               {generatedImage && (
+                  <img
+                    src={generatedImage}
+                    alt="AI Generated Image"
+                    className="w-full rounded-md"
+                  />
+                )}
+              <Button className="w-full" onClick={() => handleCopyToClipboard(generatedPost.post)}>
+                Copy to Clipboard
+              </Button>
+              <Button className="w-full" onClick={handleGenerateImage}>
+                 Add AI Generated Image
+              </Button>
+            </CardFooter>
+             <div className="flex flex-col items-center justify-center w-full mt-4">
+              <h2 className="text-2xl font-bold mb-2">Post It</h2>
+              <div className="flex flex-row justify-center space-x-4">
+                <Button className="flex flex-col items-center justify-center p-2" style={{ marginTop: '10px', marginBottom: '5px' }} onClick={() => handleLinkedInPost(generatedPost.post)}>
+                  <Icons.linkedin className="mx-auto" size={20} />
+                  <span className="mx-auto">LinkedIn</span>
+                </Button>
+                <Button className="flex flex-col items-center justify-center p-2" style={{ marginTop: '10px', marginBottom: '5px' }} onClick={() => handleFacebookPost(generatedPost.post)}>
+                  <Icons.facebook className="mx-auto" size={20} />
+                  <span className="mx-auto">Facebook</span>
+                </Button>
+                <Button className="flex flex-col items-center justify-center p-2" style={{ marginTop: '10px', marginBottom: '5px' }} onClick={() => handleTwitterPost(generatedPost.post)}>
+                  <Icons.twitter className="mx-auto" size={20} />
+                  <span className="mx-auto">X</span>
+                </Button>
+                {/* Placeholder for Instagram - No direct posting available */}
+                <Button disabled className="flex flex-col items-center justify-center p-2" style={{ marginTop: '10px', marginBottom: '5px' }}>
+                  <Icons.instagram className="mx-auto" size={20} />
+                  <span className="mx-auto">Instagram</span>
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+      </Card>
+    </div>
   );
 }
