@@ -10,11 +10,12 @@ from dotenv import load_dotenv
 load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
-async def generate_social_post(topic, tone):
+async def generate_social_post(topic, tone, max_length):
     """
-    Generate a social media post using OpenAI.
+    Generate a social media post using OpenAI, ensuring the length is within the specified range.
     """
-    prompt = f"Generate a social media post about {topic} with a {tone} tone."
+    min_length = int(max_length * 0.5)
+    prompt = f"Generate a social media post about {topic} with a {tone} tone. The post should be between {min_length} and {max_length} characters."
     try:
         response = openai.completions.create(
             model="gpt-3.5-turbo-instruct",
@@ -24,7 +25,24 @@ async def generate_social_post(topic, tone):
             stop=None,
             temperature=0.7,
         )
-        return response.choices[0].text.strip()
+        post_content = response.choices[0].text.strip()
+        
+        # Ensure the generated post is within the length constraints
+        if len(post_content) < min_length:
+            prompt = f"Expand the following social media post to be at least {min_length} characters while maintaining the same topic and tone: {post_content}"
+            response = openai.completions.create(
+                model="gpt-3.5-turbo-instruct",
+                prompt=prompt,
+                max_tokens=200,
+                n=1,
+                stop=None,
+                temperature=0.7,
+            )
+            post_content = response.choices[0].text.strip()
+        elif len(post_content) > max_length:
+            post_content = post_content[:max_length]
+        
+        return post_content
     except Exception as e:
         return f"Error generating social media post: {str(e)}"
 
@@ -50,10 +68,14 @@ def home(request):
         if form.is_valid():
             topic = form.cleaned_data['topic']
             tone = form.cleaned_data['tone']
+            max_length = form.cleaned_data['max_length']
+
             # Generate social media post
-            social_post = generate_social_post(topic, tone)
+            social_post = generate_social_post(topic, tone, max_length)
+
             # Generate AI image
             image_url = generate_ai_image(await social_post)  # Ensure social_post is awaited
+            
             # Create a Post instance in the database
             post = Post.objects.create(topic=topic, tone=tone, content=await social_post, image_url=image_url)
             return render(request, 'generator/result.html', {'post': post})
