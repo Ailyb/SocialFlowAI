@@ -46,9 +46,27 @@ export default function Home() {
     },
   });
 
-  const handleCopyToClipboard = async (text: string) => {
+   const handleCopyToClipboard = async (text: string, imageUrl: string | null = null) => {
     try {
-      await navigator.clipboard.writeText(text);
+      if (imageUrl) {
+        // Fetch the image as a Blob
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+
+        // Convert the Blob to a File
+        const file = new File([blob], "image.png", { type: blob.type });
+
+        // Create a new ClipboardItem with the image
+        const clipboardItem = new ClipboardItem({
+          [blob.type]: file
+        });
+
+        // Write the ClipboardItem to the clipboard
+        await navigator.clipboard.write([clipboardItem]);
+      } else {
+        await navigator.clipboard.writeText(text);
+      }
+
       toast({
         title: 'Copied to clipboard!',
         description: 'The post content has been copied to your clipboard.',
@@ -259,7 +277,7 @@ export default function Home() {
                     className="w-full rounded-md"
                   />
                 )}
-              <Button className="w-full" onClick={() => handleCopyToClipboard(generatedPost.post)}>
+              <Button className="w-full" onClick={() => handleCopyToClipboard(generatedPost.post, generatedImage)}>
                 Copy to Clipboard
               </Button>
               <Button className="w-full" onClick={handleGenerateImage}>
