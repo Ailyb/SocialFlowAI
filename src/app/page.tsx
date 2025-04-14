@@ -8,6 +8,7 @@ import {Label} from '@/components/ui/label';
 import {Textarea} from '@/components/ui/textarea';
 import {generateSocialPost, GenerateSocialPostOutput} from '@/ai/flows/generate-social-post';
 import {useToast} from '@/hooks/use-toast';
+import {generateAIImageFlow} from '@/ai/flows/generate-ai-image';
 import {z} from 'zod';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
@@ -36,6 +37,7 @@ export default function Home() {
   const {toast} = useToast();
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null); // Store the URL of the generated image
+  const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false); // Track whether an image is being generated
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,7 +64,7 @@ export default function Home() {
         });
 
         // Write the ClipboardItem to the clipboard
-       // await navigator.clipboard.write([clipboardItem]);
+        await navigator.clipboard.write([clipboardItem]);
       }
        await navigator.clipboard.writeText(text);
 
@@ -159,29 +161,33 @@ export default function Home() {
   };
 
   const handleGenerateImage = async () => {
+      setIsGeneratingImage(true);
+
       if (!generatedPost || !generatedPost.post) {
         toast({
           variant: 'destructive',
           title: 'Error',
           description: 'No post generated yet. Please generate a post first.',
         });
+        setIsGeneratingImage(false);
         return;
       }
+      let imageUrl
+      try {
+        imageUrl = await generateAIImageFlow(generatedPost.post);
+      } catch(e){
+        setIsGeneratingImage(false);
+        return;
+      }
+      
 
-      // Placeholder logic: Replace with your AI image generation integration
-      // Use the generatedPost.post as the prompt for image generation
-      // Example:
-      // const imageUrl = await generateAIImage(generatedPost.post); // Replace generateAIImage with your actual function
-      // setGeneratedImage(imageUrl);
-
-      // For now, use a placeholder image related to the post:
-      const imageUrl = `https://picsum.photos/512/256?text=${encodeURIComponent(generatedPost.post.substring(0, 20))}`;
       setGeneratedImage(imageUrl);
 
       toast({
         title: 'AI Image Generated!',
         description: 'An AI-generated image has been created for your post.',
       });
+      setIsGeneratingImage(false);
     };
 
 
@@ -291,9 +297,13 @@ export default function Home() {
               <Button className="w-full" onClick={() => handleCopyToClipboard(generatedPost.post, generatedImage)}>
                 Copy to Clipboard
               </Button>
-              <Button className="w-full" onClick={handleGenerateImage}>
-                 Add AI Generated Image
-              </Button>
+              {!isGeneratingImage && (
+                <Button className="w-full" onClick={handleGenerateImage}>
+                  Add AI Generated Image
+                </Button>
+              )}
+              {isGeneratingImage && <Button disabled className="w-full"><Icons.spinner className="mr-2 h-4 w-4 animate-spin" />Generating...</Button>}
+              
             </CardFooter>
              <div className="flex flex-col items-center justify-center w-full mt-4">
               <h2 className="text-2xl font-bold mb-2">Post It</h2>
