@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+firebase-admin
+google-generativeai  # Added for Gemini
+diffusers
+torch
+transformers
+pillow
+python-decouple
+requests

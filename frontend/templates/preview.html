@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Preview Post</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Preview Post</h1>
+        <textarea class="form-control" rows="5">{{ post.text }}</textarea>
+        {% if post.image_url %}
+        <img src="{{ post.image_url }}" class="img-fluid" style="max-width: 300px;">
+        {% endif %}
+        <button class="btn btn-secondary" onclick="navigator.clipboard.writeText('{{ post.text }}')">Copy Text</button>
+        {% if post.image_url %}
+        <button class="btn btn-secondary" onclick="copyImage('{{ post.image_url }}')">Copy Image</button>
+        {% endif %}
+        <form method="POST" action="/post/linkedin" style="display:inline;">
+            <input type="hidden" name="post" value="{{ post.text }}">
+            <input type="hidden" name="image" value="{{ post.image_url }}">
+            <button type="submit" class="btn btn-primary">Post to <img src="/static/linkedin-icon.png" width="20"></button>
+        </form>
+        <!-- Similar buttons for Twitter, Facebook -->
+    </div>
+    <script>
+        async function copyImage(url) {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+        }
+    </script>
+</body>
+</html>

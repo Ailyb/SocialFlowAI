@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SocialPostGenerator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <script src="{{ url_for('static', filename='js/htmx.min.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard</h1>
+        <form method="POST" action="/dashboard">
+            <label>Platform</label>
+            <select name="platform" class="form-control">
+                <option>LinkedIn</option>
+                <option>Twitter</option>
+                <option>Facebook</option>
+            </select>
+            <label>Tone</label>
+            <select name="tone" class="form-control">
+                <option>Professional</option>
+                <option>Casual</option>
+                <option>Inspirational</option>
+            </select>
+            <label>Niche</label>
+            <select name="niche" class="form-control">
+                <option>Marketers</option>
+                <option>Startups</option>
+                <option>Freelancers</option>
+            </select>
+            <label>Keywords</label>
+            <input type="text" name="keywords" class="form-control" placeholder="e.g., innovation, growth">
+            <label>Max Length: <span id="length-value">200</span></label>
+            <input type="range" name="max_length" min="50" max="3000" value="200" oninput="document.getElementById('length-value').innerText = this.value" class="form-range">
+            <button type="submit" class="btn btn-primary">Generate Post</button>
+        </form>
+    </div>
+</body>
+</html>
