@@ -17,7 +17,9 @@ import {postToLinkedIn, LinkedInPost} from "@/services/linkedin";
 import {postToFacebook, FacebookPost} from "@/services/facebook";
 import {postToTwitter, Tweet} from "@/services/twitter";
 import { Icons } from '@/components/icons';
-import { Checkbox } from "@/components/ui/checkbox"
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 const formSchema = z.object({
   topic: z.string().min(2, {
@@ -32,6 +34,7 @@ const formSchema = z.object({
 });
 
 export default function Home() {
+  const { user } = useAuth();
   const [generatedPost, setGeneratedPost] = useState<GenerateSocialPostOutput | null>(null);
   const {toast} = useToast();
   const [authToken, setAuthToken] = useState<string | null>(null);
@@ -192,8 +195,43 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <h1 className="text-4xl font-bold mb-4">SocialFlow AI</h1>
-      <p className="text-lg mb-8">Your AI-powered social media post generator.</p>
+      {/* Header with Auth Navigation */}
+      <div className="w-full max-w-4xl mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">SocialFlow AI</h1>
+            <p className="text-lg">Your AI-powered social media post generator.</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <>
+                <Link href="/dashboard">
+                  <Button variant="outline">
+                    <Icons.user className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <span className="text-sm text-gray-600">
+                  {user.displayName || user.email}
+                </span>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="outline">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth/register">
+                  <Button>
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Create a Social Media Post</CardTitle>
